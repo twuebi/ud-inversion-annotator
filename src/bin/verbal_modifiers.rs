@@ -32,21 +32,36 @@ fn main() {
 
         for idx in 1..g.len() {
             let mut feat = "".to_string();
-
             if g[idx].token().unwrap().pos().unwrap().starts_with("VERB") {
-                let mut first_nmod = true;
+                let mut first_pp = true;
                 let mut first_advmod = true;
+                let mut first_part = true;
+                let mut first_neg = true;
                 for triple in g.dependents(idx) {
                     let rel = triple.relation().expect("no rel");
-                    if rel.starts_with("nmod") && first_nmod {
-                        feat += &format!("|{}:1", "nmod");
-                        first_nmod = false;
-                    }
+                    if rel.starts_with("obl") && first_pp {
+                        for dep in g.dependents(triple.dependent()) {
+                            if g[dep.dependent()].token().expect("no token").pos().expect("no pos").contains("APPR") {
+                                feat += &"|vpp:1";
+                                first_pp = false;
+                            }
+                            
+                        }
 
+                    }
+                    if rel.starts_with("compound:prt") && first_part {
+                        feat += &"|prt:1";
+                        first_part = false;
+                    }
                     if rel.starts_with("advmod") && first_advmod {
-                        feat += &format!("|{}:1", "advmod");
+                        feat += &"|vadvmod:1";
                         first_advmod = false;
                     }
+                    if rel.contains("neg") && first_neg {
+                        feat += &"|vneg:1";
+                        first_neg = false;
+                    }
+
                 }
             }
 
@@ -63,6 +78,7 @@ fn main() {
                 .or_exit("Token missing", 1)
                 .set_features(Some(Features::from_string(feats)));
         }
+
         output
             .write_sentence(&sent)
             .or_exit("Failed writing sent.", 1);

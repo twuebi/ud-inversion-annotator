@@ -44,7 +44,8 @@ fn main() {
                     if rel == "nsubj" {
                         collection[0] = triple.dependent();
                     }
-                    if rel.starts_with("obj") && first {
+                    let form = g[triple.dependent()].token().expect("missing_token").form();
+                    if rel.starts_with("obj") && form != "sich" && first {
                         first = false;
                         collection[1] = triple.dependent();
                     }
